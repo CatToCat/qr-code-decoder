@@ -3,6 +3,8 @@ import { scanRGBABuffer } from "./vendor/zbar-wasm.mjs";
 const elements = {
   input: document.getElementById("qr-image-url"),
   decodeBtn: document.getElementById("qr-decode-btn"),
+  uploadBtn: document.getElementById("qr-upload-btn"),
+  fileInput: document.getElementById("qr-file-input"),
   copyBtn: document.getElementById("qr-copy-btn"),
   status: document.getElementById("qr-status"),
   preview: document.getElementById("qr-preview"),
@@ -21,6 +23,7 @@ function setStatus(message, state) {
 
 function setBusy(isBusy) {
   if (elements.decodeBtn) elements.decodeBtn.disabled = isBusy;
+  if (elements.uploadBtn) elements.uploadBtn.disabled = isBusy;
   if (elements.input) elements.input.disabled = isBusy;
 }
 
@@ -273,21 +276,15 @@ async function decodePipeline(img) {
 
 // ---- UI handlers ---------------------------------------------------------
 
-async function handleDecode() {
-  const url = normalizeUrl(elements.input ? elements.input.value : "");
-  if (!url) {
-    setStatus("Please enter an image URL first.", "error");
-    if (elements.input) elements.input.focus();
-    return;
-  }
-
+// Shared: load an image source (proxy URL, data URL, or blob URL), preview it,
+// run the decode pipeline, and report the result.
+async function decodeFromSrc(src, { revoke = false } = {}) {
   clearResult();
   clearPreview();
   setBusy(true);
-  setStatus("Fetching image...", "loading");
+  setStatus("Loading image...", "loading");
 
   try {
-    const src = toLoadableSrc(url);
     const img = await loadImage(src);
     showPreview(src);
 
@@ -307,7 +304,29 @@ async function handleDecode() {
     setStatus(err && err.message ? err.message : String(err), "error");
   } finally {
     setBusy(false);
+    if (revoke && /^blob:/i.test(src)) URL.revokeObjectURL(src);
   }
+}
+
+async function handleDecode() {
+  const url = normalizeUrl(elements.input ? elements.input.value : "");
+  if (!url) {
+    setStatus("Please enter an image URL, or upload / paste an image.", "error");
+    if (elements.input) elements.input.focus();
+    return;
+  }
+  await decodeFromSrc(toLoadableSrc(url));
+}
+
+// Decode a local File / Blob (upload or paste) entirely in the browser — no
+// network, so it works even when the image's CDN blocks the proxy.
+async function handleLocalImage(file) {
+  if (!file || !/^image\//i.test(file.type)) {
+    setStatus("That is not an image file.", "error");
+    return;
+  }
+  const src = URL.createObjectURL(file);
+  await decodeFromSrc(src, { revoke: true });
 }
 
 async function handleCopy() {
@@ -331,6 +350,34 @@ function bind() {
       }
     });
   }
+
+  // Upload button -> hidden file input.
+  if (elements.uploadBtn && elements.fileInput) {
+    elements.uploadBtn.addEventListener("click", function () {
+      elements.fileInput.click();
+    });
+    elements.fileInput.addEventListener("change", function () {
+      const file = elements.fileInput.files && elements.fileInput.files[0];
+      if (file) handleLocalImage(file);
+      elements.fileInput.value = ""; // allow re-selecting the same file
+    });
+  }
+
+  // Paste an image anywhere on the page (Ctrl/Cmd + V).
+  window.addEventListener("paste", function (e) {
+    const items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind === "file" && /^image\//i.test(item.type)) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          handleLocalImage(file);
+        }
+        return;
+      }
+    }
+  });
 }
 
 clearResult();

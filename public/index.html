@@ -82,7 +82,7 @@
         </span>
         <div class="qr-header-text">
           <h1 class="qr-title">QR Code Decoder</h1>
-          <p class="qr-subtitle">Paste an image link and decode the QR code back to its original text. The fetch is proxied server-side to bypass CDN hotlink protection.</p>
+          <p class="qr-subtitle">Decode a QR code back to its original text. Paste an image URL (fetched server-side to bypass CDN hotlink protection), or upload / paste an image to decode it locally in your browser.</p>
         </div>
       </header>
 
@@ -98,6 +98,11 @@
             spellcheck="false"
           />
           <button type="button" id="qr-decode-btn" class="qr-decode-btn">Decode</button>
+        </div>
+        <div class="qr-local-row">
+          <button type="button" id="qr-upload-btn" class="qr-upload-btn">Upload image</button>
+          <span class="qr-local-hint">or paste an image (Ctrl/Cmd&#8201;+&#8201;V) — works when a URL is blocked by the source.</span>
+          <input type="file" id="qr-file-input" class="qr-hidden-file" accept="image/*" />
         </div>
         <p id="qr-status" class="qr-status" role="status"></p>
       </div>

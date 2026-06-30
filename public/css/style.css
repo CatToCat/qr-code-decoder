@@ -122,6 +122,46 @@ body {
   cursor: not-allowed;
 }
 
+.qr-local-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.qr-upload-btn {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(118, 208, 106, 0.4);
+  background: rgba(118, 208, 106, 0.1);
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s ease, opacity 0.18s ease;
+}
+
+.qr-upload-btn:hover:not(:disabled) {
+  background: rgba(118, 208, 106, 0.18);
+}
+
+.qr-upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qr-local-hint {
+  font-size: 12px;
+  color: #7a857d;
+}
+
+.qr-hidden-file {
+  display: none;
+}
+
 .qr-status {
   margin: 12px 0 0;
   min-height: 18px;
